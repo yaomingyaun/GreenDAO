@@ -1,6 +1,7 @@
 package com.bw.ymy.week2_text1.activity;
 
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,13 +15,20 @@ import android.widget.Toast;
 
 import com.bw.ymy.week2_text1.APIs;
 import com.bw.ymy.week2_text1.Adapter.MyBase;
+import com.bw.ymy.week2_text1.DaoMaster;
+import com.bw.ymy.week2_text1.DaoSession;
+import com.bw.ymy.week2_text1.Nutils;
 import com.bw.ymy.week2_text1.R;
+import com.bw.ymy.week2_text1.UserDao;
+import com.bw.ymy.week2_text1.aa.User;
 import com.bw.ymy.week2_text1.bean.UserBean;
 import com.bw.ymy.week2_text1.presenter.IPresentermpl;
 import com.bw.ymy.week2_text1.view.IView;
 import com.jcodecraeer.xrecyclerview.XRecyclerView;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener ,IView {
@@ -33,6 +41,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean isLinear;
     private Button zong,xiao,jia;
     private EditText etname;
+
+    //数据库
+    private DaoMaster.DevOpenHelper helper;
+    private SQLiteDatabase database;
+    private  DaoMaster master;
+    private DaoSession session;
+    private UserDao user;
+    private  int qq;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //获取资源Id
     public  void  initview()
     {
+        //获取资源id
         xRecyclerView=findViewById(R.id.xrecyclerview);
         qie=findViewById(R.id.qie);
         zong=findViewById(R.id.zong);
@@ -57,6 +74,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         xiao.setOnClickListener(this);
         jia.setOnClickListener(this);
         fan.setOnClickListener(this);
+
+
         //判断布局
         isLinear=true;
         //实列化
@@ -80,36 +99,59 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 lodata();
             }
         });
-        //布局
+        //布局  不可弄混
+        setDatabase();
         isLayoutManager();
+        lodata();
     }
-
     //获取数据
     public  void lodata()
     {
-        Map<String,String> map=new HashMap<>();
+            //判断网络 成功 显示
+        boolean b=Nutils.newwork(this);
+        if(b)
+        {
+            Map<String,String> map=new HashMap<>();
             String name=etname.getText().toString();
-             map.put("keywords","手机");
-             map.put("page",page+"");
+            map.put("keywords","手机");
+            map.put("page",page+"");
             iPresentermpl.getRequest(APIs.TYPE_TEXT,map,UserBean.class);
+
+        }else
+            {
+                //失败显示数据库中的数据
+            List<UserBean.DataBean> beans=new ArrayList<>();
+            List<User> list=user.queryBuilder().list();
+            for (int i=0;i<list.size();i++)
+            {
+                UserBean.DataBean dataBean=new UserBean.DataBean();
+                dataBean.setPrice(list.get(i).getPrice());
+                dataBean.setTitle(list.get(i).getTitle());
+                dataBean.setImages(list.get(i).getImages());
+                //id替换pid  重要的
+                dataBean.setPid((int) list.get(i).getId());
+                beans.add(dataBean);
+            }
+            //显示数据库
+            adapter.setlist(beans);
+        }
     }
 
-
     //切换
-
     public  void  isLayoutManager()
     {
         if(isLinear)
         {
+            //线性
             LinearLayoutManager layoutManager=new LinearLayoutManager(this);
             xRecyclerView.setLayoutManager(layoutManager);
-            findViewById(R.id.qie).setBackgroundResource(R.drawable.grid);
 
         }else
         {
+            //网格
             GridLayoutManager gridLayoutManager=new GridLayoutManager(this,2);
             xRecyclerView.setLayoutManager(gridLayoutManager);
-            findViewById(R.id.qie).setBackgroundResource(R.drawable.linear);
+
         }
         //必须写在这里 不能换
         adapter=new MyBase(this,isLinear);
@@ -144,9 +186,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 pa.put("keywords",name);
                 iPresentermpl.getRequest(APIs.TYPE_TEXT,pa,UserBean.class);
                 break;
-                //点击切换
+                //点击切换布局
             case  R.id.qie:
-                Toast.makeText(this,"ss",Toast.LENGTH_LONG).show();
                 isLayoutManager();
                 break;
                 //点击查看综合
@@ -155,6 +196,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 zong.setTextColor(Color.RED);
                 jia.setTextColor(Color.BLACK);
                 xiao.setTextColor(Color.BLACK);
+
                Map<String,String> map1=new HashMap<>();
                 map1.put("sort",0+"");
                 map1.put("keywords","手机");
@@ -188,12 +230,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 default:break;
         }
     }
+    //数据库
+    public  void  setDatabase()
+    {
+        helper=new DaoMaster.DevOpenHelper(this,"sport-db",null);
+        database=helper.getWritableDatabase();
+        master=new DaoMaster(database);
+        session=master.newSession();
+        user=session.getUserDao();
+    }
         //判断
     @Override
     public void onsuccess(Object data) {
         if(data instanceof UserBean)
         {
             UserBean userBean= (UserBean) data;
+            List<UserBean.DataBean> beanDatas=userBean.getData();
             if(page==1)
             {
                adapter.setlist(userBean.getData());
@@ -205,6 +257,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //停止
             xRecyclerView.refreshComplete();
             xRecyclerView.loadMoreComplete();
+            for (int i=0;i<beanDatas.size();i++)
+            {
+                User user1=new User();
+                user1.setTitle(beanDatas.get(i).getTitle());
+                user1.setPrice(beanDatas.get(i).getPrice());
+                user1.setImages(beanDatas.get(i).getImages());
+                //
+                user1.setId(beanDatas.get(i).getPid());
+                // 添加或者替换
+                user.insertOrReplace(user1);
+
+            }
         }
     }
     //解绑

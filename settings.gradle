@@ -1,1 +1,1 @@
-include ':app', ':week2_text1', ':goods'
+include ':app', ':reendao'

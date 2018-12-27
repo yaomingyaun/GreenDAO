@@ -1,6 +1,7 @@
 package com.bw.ymy.week2_text1.Adapter;
 
 import android.content.Context;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextPaint;
@@ -15,6 +16,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bw.ymy.week2_text1.R;
 import com.bw.ymy.week2_text1.bean.UserBean;
+import com.facebook.drawee.view.SimpleDraweeView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,9 +79,9 @@ public class MyBase extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
        viewHolder1.title.setText(bean.getTitle());
         viewHolder1.price.setText("￥"+bean.getPrice());
         //viewHolder1.shou.setText("已售"+bean.getSalenum()+"台");
-        String images=mdata.get(i).getImages();
-        String[] split=images.split("\\|");
-        Glide.with(context).load(split[0]).into(viewHolder1.icon);
+       String[] solit=bean.getImages().split("\\|");
+       Uri uri=Uri.parse(solit[0]);
+       viewHolder1.icon.setImageURI(uri);
 
         viewHolder1.layout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -99,7 +101,7 @@ public class MyBase extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     class ViewHolder extends RecyclerView.ViewHolder{
 
         private TextView title,price;
-        private ImageView icon;
+        private SimpleDraweeView icon;
         private LinearLayout layout;
 
         public ViewHolder(@NonNull View itemView) {
