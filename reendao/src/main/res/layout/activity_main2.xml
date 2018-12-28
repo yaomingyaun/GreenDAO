@@ -6,31 +6,23 @@
     android:layout_height="match_parent"
     tools:context=".activity.Main2Activity"
     android:orientation="vertical">
-    <com.youth.banner.Banner
-        android:id="@+id/banner1"
-        android:layout_width="match_parent"
-        android:layout_height="400dp"/>
-    <TextView
-        android:id="@+id/title"
-        android:textSize="24sp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
 
-        />
-    <TextView
-        android:id="@+id/barginprice"
-        android:textSize="20sp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
 
-        />
-    <TextView
-        android:id="@+id/price"
-        android:textSize="24sp"
-        android:textColor="#fc0"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        <android.support.design.widget.TabLayout
+            android:id="@+id/tab"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+        app:tabGravity="fill"
+        android:layout_alignParentBottom="true"
+         />
+        <android.support.v4.view.ViewPager
+            android:id="@+id/viewpage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
 
+        android:layout_above="@id/tab"
         />
+
+
 
 </LinearLayout>

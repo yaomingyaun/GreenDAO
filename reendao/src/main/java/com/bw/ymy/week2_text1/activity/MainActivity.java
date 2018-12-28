@@ -267,7 +267,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 user1.setId(beanDatas.get(i).getPid());
                 // 添加或者替换
                 user.insertOrReplace(user1);
-
             }
         }
     }
